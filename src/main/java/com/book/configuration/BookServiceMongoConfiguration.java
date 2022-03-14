@@ -8,7 +8,7 @@ public class BookServiceMongoConfiguration extends AbstractMongoClientConfigurat
 
     @Override
     protected String getDatabaseName() {
-        return "bookservice";
+        return "book-retailer";
     }
 
     @Override

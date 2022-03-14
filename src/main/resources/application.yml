@@ -5,7 +5,7 @@ spring:
   data:
     mongodb:
       host: localhost
-      database: books
+      database: book-retailer
       port: 27017
 
 app:
