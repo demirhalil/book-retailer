@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  data:
+    mongodb:
+      host: localhost
+      database: books
+      port: 27017
+
+app:
+  api:
+    version: 1.0.0
+    title: Book Service
+    basePackage: com.book
+    description: Book service api documentation
+    swagger:
+      enable: true
