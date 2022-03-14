@@ -8,6 +8,22 @@ spring:
       database: book-retailer
       port: 27017
 
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+
 app:
   api:
     version: 1.0.0
