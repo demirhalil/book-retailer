@@ -36,6 +36,30 @@ dependencies {
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
 }
 
+sourceSets {
+    integration {
+        java.srcDir file("src/it/java")
+        resources.srcDir file("src/it/resources")
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
+}
+
+configurations {
+    integrationImplementation.extendsFrom testImplementation
+    integrationRuntime.extendsFrom testRuntime
+}
+
+task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.integration.output.classesDirs
+    classpath = sourceSets.integration.runtimeClasspath
+    useJUnitPlatform()
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+check.dependsOn integrationTest
+integrationTest.mustRunAfter test
+
