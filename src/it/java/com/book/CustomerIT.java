@@ -13,6 +13,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,10 +46,22 @@ public class CustomerIT {
     private URI uri;
     private Customer customer;
 
+    @BeforeEach
+    void setUp() {
+        customerRepository.deleteAll();
+        orderRepository.deleteAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        customerRepository.deleteAll();
+        orderRepository.deleteAll();
+    }
+
     @Test
+    @DisplayName("When a valid customer is added, then it should save database and then return 201 status code")
     void testAddCustomer() throws URISyntaxException {
         // Given
-        customerRepository.deleteAll();
         uri = new URI(BASE_URL);
         customer = TestUtil.createCustomer("customer-name", "customer-lastname");
         HttpHeaders headers = new HttpHeaders();
@@ -54,25 +69,66 @@ public class CustomerIT {
         HttpEntity<Customer> request = new HttpEntity<>(customer, headers);
 
         // When
-        ResponseEntity<Customer> result = this.restTemplate.postForEntity(uri, request, Customer.class);
+        ResponseEntity<Customer> response = this.restTemplate.postForEntity(uri, request, Customer.class);
 
         // Then
-        assertEquals(201, result.getStatusCodeValue());
+        assertEquals(201, response.getStatusCodeValue());
         assertEquals(1, customerRepository.findAll().size());
-        assertNotNull(result.getBody().getId());
-        assertEquals(customer.getName(),result.getBody().getName());
-        assertEquals(customer.getLastName(),result.getBody().getLastName());
+        assertNotNull(response.getBody().getId());
+        assertEquals(customer.getName(),response.getBody().getName());
+        assertEquals(customer.getLastName(),response.getBody().getLastName());
 
-        customerRepository.deleteAll();
         customer = null;
         uri = null;
     }
 
     @Test
+    @DisplayName("When a invalid customer is added, then it should not save it to database and return 400 status code")
+    void testAddCustomerWhenDataIsNotValid() throws URISyntaxException {
+        // Given
+        uri = new URI(BASE_URL);
+        customer = TestUtil.createCustomer("", "customer-lastname");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(getBearerToken());
+        HttpEntity<Customer> request = new HttpEntity<>(customer, headers);
+
+        // When
+        ResponseEntity<Customer> response = this.restTemplate.postForEntity(uri, request, Customer.class);
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(0, customerRepository.findAll().size());
+
+        customer = null;
+        uri = null;
+    }
+
+    @Test
+    @DisplayName("When a customer tries to register with the same email address then it should return 409 status code")
+    void testAddCustomerWhenSameCustomerTriesToRegisterWithSameEmailAddress() throws URISyntaxException {
+        // Given
+        uri = new URI(BASE_URL);
+        customer = TestUtil.createCustomer("customer-name", "customer-lastname");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(getBearerToken());
+        HttpEntity<Customer> request = new HttpEntity<>(customer, headers);
+
+        // When
+        this.restTemplate.postForEntity(uri, request, Customer.class);
+        ResponseEntity<Customer> response = this.restTemplate.postForEntity(uri, request, Customer.class);
+
+        // Then
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(1, customerRepository.findAll().size());
+
+        customer = null;
+        uri = null;
+    }
+
+    @Test
+    @DisplayName("When customer has order then it should return the orders of the customer")
     void testGetOrdersByCustomerId() throws URISyntaxException {
         // Given
-        orderRepository.deleteAll();
-        customerRepository.deleteAll();
         uri = new URI(BASE_URL);
         customer = TestUtil.createCustomer("customer-name", "customer-lastname");
         customerRepository.save(customer);
@@ -95,6 +151,9 @@ public class CustomerIT {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, Objects.requireNonNull(response.getBody()).length);
         assertEquals(existCustomer.getId(), response.getBody()[0].getCustomerId());
+
+        uri = null;
+        customer = null;
     }
 
     private String getBearerToken() throws URISyntaxException {
