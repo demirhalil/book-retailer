@@ -1,7 +1,6 @@
 package com.book.controller;
 
 import com.book.security.model.AuthenticationRequest;
-import com.book.security.model.AuthenticationResponse;
 import com.book.security.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +29,7 @@ public class AuthenticationController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    public ResponseEntity<String> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
         try {
             this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
         } catch (BadCredentialsException var4) {
@@ -38,7 +37,7 @@ public class AuthenticationController {
         }
 
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
-        String jwt = this.jwtTokenUtil.generateToken(userDetails);
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+        String bearerToken = this.jwtTokenUtil.generateToken(userDetails);
+        return ResponseEntity.ok(bearerToken);
     }
 }
