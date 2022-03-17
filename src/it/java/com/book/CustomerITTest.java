@@ -30,7 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-public class CustomerIT {
+public class CustomerITTest {
 
     private static final String BASE_URL = "/customers";
     private static final String SECURITY_URL = "/authenticate";
