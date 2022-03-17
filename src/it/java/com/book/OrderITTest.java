@@ -80,6 +80,27 @@ public class OrderITTest {
     }
 
     @Test
+    @DisplayName("When order is added without given bearer token then it should return 403 status code")
+    void testAddOrderWithoutBearerToken() throws URISyntaxException {
+        // Given
+        uri = new URI(BASE_URL);
+        Book book = TestUtil.createBook("Marting Eden", "Jack London");
+        book.setStock(20);
+        bookRepository.save(book);
+        BigDecimal amount = book.getPrice().multiply(BigDecimal.valueOf(5L));
+        Order order = new Order(null,bookRepository.findAll().get(0).getId(),"test_customer",5,
+            LocalDateTime.now(),LocalDateTime.now().plusDays(15), amount);
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Order> request = new HttpEntity<>(order, headers);
+
+        // When
+        ResponseEntity<Order> response = this.restTemplate.postForEntity(uri, request, Order.class);
+
+        // Then
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
     @DisplayName("When order is added but bookId is missing then it should return 400 status code")
     void testAddOrderWhenBookIdIsMissing() throws URISyntaxException {
         // Given
